@@ -1,1 +1,3 @@
 # cours
+
+Some exercices
