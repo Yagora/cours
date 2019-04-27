@@ -25,7 +25,6 @@ function showScore() {
 wss.on('connection', (ws) => {
   ws.send('welcome to the battle')
   ws.on('message', function incoming(data) {
-    console.log(data)
     if (data === 'whitewalker') {
       whitwalkers++;
     } else if (data === 'winterfall') {
