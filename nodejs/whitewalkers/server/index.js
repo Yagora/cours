@@ -14,25 +14,28 @@ function showScore() {
   console.log('-------------SCORE-----------------')
   if (whitwalkers > winterfall) {
     console.log('1)Whitwalkers : ' + whitwalkers);
-    console.log('2)Winterfall : ' + winterfall);
+    console.log('2)Winterfell : ' + winterfall);
   } else {
-    console.log('1)Winterfall : ' + winterfall);
+    console.log('1)Winterfell : ' + winterfall);
     console.log('2)Whitwalkers : ' + whitwalkers);
   }
 
 }
 
 wss.on('connection', (ws) => {
-  ws.send('welcome to the battle')
+  ws.send('welcome')
   ws.on('message', function incoming(data) {
-    if (data === 'whitewalker') {
+    console.log(data);
+    /*if (data === 'whitewalker') {
       whitwalkers++;
-    } else if (data === 'winterfall') {
+      showScore();
+    } else if (data === 'winterfell') {
       winterfall++;
-    }
-    showScore();
+      showScore();
+    }*/
   });
 });
 
 
 
+console.log('10.69.1.156:8080')
