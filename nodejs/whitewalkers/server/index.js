@@ -26,13 +26,13 @@ wss.on('connection', (ws) => {
   ws.send('welcome')
   ws.on('message', function incoming(data) {
     console.log(data);
-    /*if (data === 'whitewalker') {
+    if (data === 'whitewalker') {
       whitwalkers++;
       showScore();
     } else if (data === 'winterfell') {
       winterfall++;
       showScore();
-    }*/
+    }
   });
 });
 

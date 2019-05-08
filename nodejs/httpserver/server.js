@@ -15,30 +15,29 @@ wss.on('open', function open(ws) {
 });
 
 wss.on('message', function incoming(data) {
-console.log(data);
-bitcoinCours = data;
+    bitcoinCours = data;
 });
 
 app.set("view engine","jade")
 
 app.get('/', function (req, res) {
     res.render('sample', {
-        colordd: 'red',
-        bitcoinCours
+        bitcoinCours: bitcoinCours
     });
 
 });
 
 app.get('/bitcoin', function (req, res) {
     wss.send('bitcoin-cours');
-    setTimeout(() => {
-        res.send(bitcoinCours);
+    setTimeout(function (){
+        res.send(200, bitcoinCours);
     }, 2000)
 });
 
 app.get('/javascript', function (req, res) {
     res.sendFile(__dirname + '/views/javascript.js');
 });
+
 
 app.listen(PORT, function () {
     console.log('Node server is running on ', PORT);
