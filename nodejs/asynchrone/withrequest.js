@@ -9,7 +9,6 @@ const rl = readline.createInterface({
 });
 
 let user;
-let userId
 let posts;
 let comments;
 
@@ -19,15 +18,14 @@ function getRandomNumber(max) {
 
 rl.question('Choisis un nom prénom :', (answer) => {
   request('https://jsonplaceholder.typicode.com/users', (error, response, body) => {
-    user = JSON.parse(body).filter(u => u.name === answer);
-    if (user.length === 0) {
+    user = JSON.parse(body).find(u => u.name === answer);
+    if (!user) {
       console.log('Utilisateur inconnu');
       rl.close();
       return;
     }
-    userId = user[0].id;
     request('https://jsonplaceholder.typicode.com/posts', (error, response, body) => {
-      posts = JSON.parse(body).filter(p => p.userId === userId);
+      posts = JSON.parse(body).filter(p => p.userId === user.id);
       const postId = posts[getRandomNumber(posts.length - 1)].id;
       request(`https://jsonplaceholder.typicode.com/posts/${postId}/comments`, (error, response, body) => {
         comments = JSON.parse(body);
