@@ -16,9 +16,6 @@ module.exports = class Common {
     get pointOflife() {
         return _pointOflife;
     }
-    get damage() {
-        return damage;
-    }
     takeDamage(damages) {
         this._pointOflife -= damages;
     }

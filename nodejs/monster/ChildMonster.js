@@ -1,7 +1,7 @@
 'use strict';
-const common = require('./Common');
+const Common = require('./Common');
 
-module.exports = class childMonster extends common {
+module.exports = class ChildMonster extends Common {
     constructor() {
         super(10, 0, 4);
     }
