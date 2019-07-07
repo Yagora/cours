@@ -1,6 +1,3 @@
-'use strict';
-
-const readline = require('readline');
 const db = {
     todo: [{
         name: 'Faire la vaiselle'
