@@ -1,0 +1,13 @@
+- name: Show debug
+  hosts: localhost
+  tasks:
+  - name: create file
+    file:
+      path: ./toto
+      state: touch
+
+  - name: lineinfile
+    lineinfile:
+      path: ./toto
+      regexp: '^toto='
+      line: toto=tat4

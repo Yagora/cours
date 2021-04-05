@@ -1,0 +1,12 @@
+- name: Show debug
+  hosts: localhost
+  tasks:
+  - name: Show debug
+    debug:
+      msg: "{{ message | default('Hello world') }}"
+  - name: create file
+    file:
+      path: ./toto
+      owner: tanguy
+      group: tanguy
+      state: touch
