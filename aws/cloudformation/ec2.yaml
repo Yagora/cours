@@ -1,0 +1,77 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Bastion machine stack'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: preprod
+    Description: Platform's environment (dev, preprod, etc)
+
+  Project:
+    Type: String
+    Default: dcp-headless
+    Description: Project's name or app category
+
+  BastionSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Id of zone A subnet
+
+  KeyName:
+    Type: String
+    Description: name of the SSH key for the instance
+
+  BastionImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Description: AMI ID used for Bastion
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Bastion network security group id
+
+Resources:
+
+  BastionLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "BastionLaunchTemplate-${Environment}"
+      LaunchTemplateData:
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub "Bastion-${Environment}"
+              - Key: Environment
+                Value: !Ref Environment
+              - Key: Project
+                Value: !Ref Project
+          - ResourceType: volume
+            Tags:
+              - Key: Name
+                Value: !Sub "Bastion-${Environment}"
+              - Key: Environment
+                Value: !Ref Environment
+              - Key: Project
+                Value: !Ref Project
+        KeyName: !Ref KeyName
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociatePublicIpAddress: true
+            SubnetId: !Ref BastionSubnet
+            Groups:
+              - !Ref BastionSecurityGroup
+        ImageId: !Ref BastionImageId
+        InstanceType: t3a.small
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 16
+              VolumeType: gp2
+              DeleteOnTermination: true
+              Encrypted: true
+
+Outputs:
+  KeyName:
+    Description: Current version of Eks
+    Value: "My Value"
