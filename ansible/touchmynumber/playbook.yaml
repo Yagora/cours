@@ -1,0 +1,14 @@
+- name: Show debug
+  hosts: localhost
+  tasks:
+  - name: get a number
+    shell: shuf -i 1-10 -n 1
+    register: __shell_random
+
+  - debug: msg="{{ __shell_random }}"
+  # {{ dict | dict2items }}
+
+  - name: Fail if the number is too big
+    fail:
+      msg: "Whoops! the number is too big"
+    when: ( __shell_random.stdout | int >= 10 )
