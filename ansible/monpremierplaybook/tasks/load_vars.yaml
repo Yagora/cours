@@ -1,0 +1,2 @@
+- include_vars:
+    file: "{{ playbook_dir }}/vars/vars.yaml"

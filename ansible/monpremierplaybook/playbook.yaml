@@ -1,9 +1,11 @@
 - name: Show debug
   hosts: localhost
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
   tasks:
   - name: Show debug
     debug:
-      msg: "{{ message | default('Hello world') }}"
+      msg: "{{ msg | default('Pas de message') }}"
   - name: create file
     file:
       path: ./toto
