@@ -1,0 +1,9 @@
+all:
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+    ansible_ssh_pass: password
+  hosts:
+    172.17.0.2:
+    172.17.0.3:
+    172.17.0.4:
+

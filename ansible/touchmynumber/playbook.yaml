@@ -12,3 +12,8 @@
     fail:
       msg: "Whoops! the number is too big"
     when: ( __shell_random.stdout | int >= 10 )
+
+  - name: lineinfile
+    lineinfile:
+      path: ./smallnumber.txt
+      line: __shell_random.stdout
