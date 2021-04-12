@@ -24,7 +24,7 @@ all:
           children:
             atlanta:
               hosts:
-                host1:
+                host1: #on peut renseigner l'ip
                 host2:
             raleigh:
               hosts:
@@ -38,3 +38,10 @@ all:
         northeast:
         northwest:
         southwest:
+
+
+a_group:
+    testvar: a
+    ansible_group_priority: 10
+b_group：
+    testvar: b #merge il gagne
