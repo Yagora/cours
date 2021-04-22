@@ -1,0 +1,22 @@
+- name: Get mongo backup from S3
+  aws_s3:
+    mode: list
+    bucket: "{{ mongo_backup_s3_bucket }}"
+    prefix: "{{ mongo_backup_s3_destination }}/{{ mongo_backup_archive_name_prefix }}"
+  register: backup_found
+
+- name: Stop restore if any backup was found
+  fail:
+    msg: "Any backup was found in {{ env_source }} environment"
+  when: (backup_found.s3_keys | length) <= 0
+
+- name: Download backup from the S3
+  aws_s3:
+    mode: get
+    bucket: "{{ mongo_backup_s3_bucket }}"
+    object: "{{ backup_found.s3_keys[-1] }}"
+    dest: "{{ mongo_restore_archive_folder }}/{{ ('/' + backup_found.s3_keys[-1]) | basename }}"
+
+- name: Database restoration
+  shell: "mongorestore --drop --gzip --archive={{ mongo_restore_archive_folder }}/{{ ('/' + backup_found.s3_keys[-1]) | basename }} --db datastore"
+  register: restore_command

@@ -1,0 +1,3 @@
+- fail:
+    msg: "{{ component }} is not buildable as an AMI !"
+  when: not component in bd_buildable_components

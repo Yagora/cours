@@ -1,0 +1,22 @@
+- include_tasks:
+    file: tags.yaml
+
+- name: Create Ami
+  ec2_ami:
+    name: "{{ env_component_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    instance_id: "{{ bd_machine_id }}"
+    delete_snapshot: yes
+    wait: yes
+    tags: >-
+      {{
+        bd_tags
+        | combine({ "Name": env_component_name })
+        | to_json
+      }}
+  register: ami
+
+- debug:
+    msg: "{{ ami.image_id }}"

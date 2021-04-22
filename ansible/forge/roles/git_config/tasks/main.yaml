@@ -1,0 +1,14 @@
+---
+- name: Ensure required package are installed
+  yum:
+    name:
+      - git
+    state: latest
+
+- git_config:
+    name: user.email
+    value:
+
+- git_config:
+    name: user.name
+    value:

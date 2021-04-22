@@ -1,0 +1,7 @@
+- name: Copy keys for "nestor" user
+  authorized_key:
+    user: nestor
+    key: "{{ lookup('file', item + '.pub') }}"
+  with_items: "{{ ssh_keys }}"
+  when:
+    - ssh_keys | length > 0

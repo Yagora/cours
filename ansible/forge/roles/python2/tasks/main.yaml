@@ -1,0 +1,23 @@
+- name: Install tools
+  yum:
+    name:
+      - python2-pip
+      - python-lxml
+      - libselinux-python
+      - unzip
+      - bzip2
+      - ntp
+      - tzdata
+      - vim
+      - rsync
+      - mysql-connector-python
+    state: latest
+
+- name: Install pip deps
+  pip:
+    extra_args: --upgrade
+    name:
+      - pip
+      - pathlib
+      - boto3
+      - boto

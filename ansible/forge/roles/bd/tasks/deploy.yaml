@@ -1,0 +1,22 @@
+- include_tasks:
+    file: tags.yaml
+
+- include_tasks:
+    file: ami-exists.yaml
+  when: component not in bd_provisionable_components
+
+- fail:
+    msg: 'ami does not exist !'
+  when: >-
+    ( precheck_ami.images | default([]) | length == 0 )
+    and
+    ( component not in bd_provisionable_components )
+
+- name: Set the ami image_id for deployment
+  set_fact:
+    bd_image_id: "{{ precheck_ami.images.0.image_id }}"
+  when: component not in bd_provisionable_components
+
+- include_tasks:
+    file: "provisionning-{{ hostvars[inventory_hostname][component + '_deployment'] | default('alb') }}.yaml"
+  when: component not in bd_provisionable_components

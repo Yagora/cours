@@ -1,0 +1,14 @@
+vpc_id: vpc-hjkul67lk
+
+
+############################
+# Mongo
+############################
+mongo_user: mongonestor
+
+
+############################
+# authorization
+############################
+authorization_user: nestor
+authorization_port: 8080

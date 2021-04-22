@@ -1,0 +1,19 @@
+bd_image_id: "{{ lookup('vars', component + '_base_ami_id', default = aws_base_ami_id) }}"
+bd_ip_type: private
+
+bd_instance_type: "{{ aws_instance_type | default('t3.small') }}"
+bd_key_name: "{{ aws_key | mandatory }}"
+bd_machine_ip: "{{ component | mandatory }}"
+bd_ok_to_proceed: false
+bd_ok_to_save: false
+bd_provisioning_failed: false
+
+component_dash: "{{ component | regex_replace('_', '-') }}"
+bd_build_name: "{{ component_dash }}-build"
+
+bd_tags:
+  Composant: "{{ component_dash }}"
+  Environment: "{{ env }}"
+  Version: "v{{ hostvars[inventory_hostname][component] }}"
+
+env_component_name: "{{ env }}-{{ component_dash }}"

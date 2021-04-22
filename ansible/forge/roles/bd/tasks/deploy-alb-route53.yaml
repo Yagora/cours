@@ -1,0 +1,29 @@
+- name: Get current Route53 item
+  route53:
+    private_zone: yes
+    state: get
+    zone: "{{ dns_domain }}"
+    record: "{{ item }}.{{ dns_domain }}"
+    type: A
+    ttl: 120
+    wait: yes
+    wait_timeout: 600
+  register: current_r53
+
+- name: Set Route53
+  route53:
+    private_zone: yes
+    state: present
+    zone: "{{ dns_domain }}"
+    record: "{{ item }}.{{ dns_domain }}"
+    value: "{{ deployment_elb.elb.dns_name }}"
+    type: A
+    ttl: 120
+    wait: yes
+    wait_timeout: 600
+    alias: yes
+    alias_hosted_zone_id: "{{ deployment_elb.elb.hosted_zone_id }}"
+    overwrite: yes
+  when:
+    - deployment_elb.elb.dns_name is defined
+    - current_r53.set.value is undefined or current_r53.set.value != deployment_elb.elb.dns_name + '.'

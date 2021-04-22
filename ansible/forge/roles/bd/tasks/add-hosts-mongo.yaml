@@ -1,0 +1,20 @@
+- name: Find machines
+  ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ env }}-mongo-cluster1"
+  register: vms
+
+- name: Find mongo master
+  mongo_primary:
+    host: "{{ vms.instances[0].private_ip_address }}"
+  register: mongo
+
+- name: Add hosts to group
+  add_host:
+    name: "{{ mongo.primary_address }}"
+    groups:
+      - "{{ component }}"
+    deployed_version: "{{ vms.instances[0].tags.LastRun | default('none') }}"

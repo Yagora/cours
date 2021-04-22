@@ -1,0 +1,13 @@
+- name: install mongo repository
+  copy:
+    src: mongo.repo
+    dest: /etc/yum.repos.d/mongo.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure pymongo is installed
+  yum:
+    name:
+      - python-pymongo
+      - mongodb-org-shell

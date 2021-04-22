@@ -1,0 +1,9 @@
+- name: Add single host
+  add_host:
+    hostname: "{{ component }}"
+    ansible_connection: local
+  when: component in bd_deployable_components
+
+- name: Find multiple hosts
+  include_tasks: "add-hosts-{{ component }}.yaml"
+  when: component in bd_provisionable_components

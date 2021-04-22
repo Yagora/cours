@@ -1,0 +1,6 @@
+- name: copie .env to instance
+  template:
+    src: .env.j2
+    dest: /home/nestor/.env
+    owner: nestor
+    group: nestor

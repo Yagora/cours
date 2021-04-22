@@ -1,0 +1,66 @@
+- name: Register AMI into a new launch template version
+  register: ltObject
+  ec2_launch_template:
+    region: eu-west-3
+    name: "LT-{{ env }}-{{ component }}"
+    iam_instance_profile: "{{ aws_iam_profile }}"
+    default_version: latest
+    security_group_ids: "{{ hostvars[inventory_hostname][component + '_security_group_ids'] }}"
+    key_name: "{{ aws_key }}"
+    image_id: "{{ bd_image_id | default(aws_base_ami_id) }}"
+    instance_type: t3.micro
+    tags:
+      Name: "ec2-development-{{ component }}"
+      Type: "Microservice"
+      Microservice: "{{ component }}"
+
+- name: Make sure to have a target group created for this micro-service
+  register: targetGroupObect
+  community.aws.elb_target_group:
+    name: "TG-{{ env }}-{{ component }}"
+    region: eu-west-3
+    target_type: instance
+    protocol: http
+    port: "{{ hostvars[inventory_hostname][component + '_port'] | default('3000') }}"
+    health_check_path: /status
+    health_check_protocol: http
+    successful_response_codes: "200"
+    healthy_threshold_count: 2
+    health_check_interval: 10
+    health_check_timeout: 5
+    vpc_id: "{{ aws_vpc_id }}"
+    state: present
+
+- name: Make sure to have ALB connected to this target group
+  community.aws.elb_application_lb:
+    name: "{{ application_load_balancer_name }}"
+    region: eu-west-3
+    subnets: "{{ aws_subnet_ids.private }}"
+    security_groups: "{{ aws_security_group_ids.private }}"
+    listeners: "{{ application_load_balancer_listeners }}"
+    state: present
+
+- name: Implement new version on Auto-scalling group
+  community.aws.ec2_asg:
+    region: eu-west-3
+    name: "ASG-{{ env }}-{{ MICROSERVICE }}"
+    replace_all_instances: yes
+    wait_for_instances: no #yes
+    #wait_timeout: 500
+    launch_template:
+      version: "{{ ltObject.template.latest_version_number }}"
+      launch_template_name: "{{ ltObject.template.launch_template_name }}"
+      launch_template_id: "{{ ltObject.template.launch_template_id }}"
+    vpc_zone_identifier: "{{ service.subnets }}"
+    target_group_arns:
+      - "{{ targetGroupObect.target_group_arn }}"
+    min_size: 1
+    max_size: 3
+    desired_capacity: 1
+    health_check_type: ELB
+    state: present
+
+# À utiliser si besoin
+- include_tasks:
+    file: provisionning-alb-route53.yaml
+  with_items: "{{ hostvars[inventory_hostname][ component + '_dns_names' ] }}"

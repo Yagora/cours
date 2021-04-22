@@ -79,6 +79,7 @@ createAnsible(){
   	echo "all:" > $ANSIBLE_DIR/00_inventory.yml
 	echo "  vars:" >> $ANSIBLE_DIR/00_inventory.yml
     echo "    ansible_python_interpreter: /usr/bin/python3" >> $ANSIBLE_DIR/00_inventory.yml
+    echo "    ansible_ssh_pass: password" >> $ANSIBLE_DIR/00_inventory.yml
   echo "  hosts:" >> $ANSIBLE_DIR/00_inventory.yml
   for conteneur in $(docker ps -a | grep $USER-debian | awk '{print $1}');do
     docker inspect -f '    {{.NetworkSettings.IPAddress }}:' $conteneur >> $ANSIBLE_DIR/00_inventory.yml

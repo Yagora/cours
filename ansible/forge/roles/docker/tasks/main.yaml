@@ -1,0 +1,67 @@
+- name: Ensure docker installed
+  yum:
+    name: docker
+    state: latest
+
+- name: Install Python Deps
+  pip:
+    executable: /usr/bin/pip
+    extra_args: --upgrade
+    name:
+      - docker-py
+
+- name: Download ecr login helper
+  get_url:
+    url: https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.4.0/linux-amd64/docker-credential-ecr-login
+    dest: /usr/bin/docker-credential-ecr-login
+    mode: "0755"
+
+- name: Add nestor user to docker group
+  user:
+    name: nestor
+    groups: docker
+    append: yes
+
+- name: Add root user to docker group
+  user:
+    name: root
+    groups: docker
+    append: yes
+
+- name: Create docker config directory
+  become: yes
+  file:
+    path: /home/nestor/.docker
+    owner: nestor
+    group: nestor
+    state: directory
+
+- name: Copy docker config
+  copy:
+    src: config.json
+    dest: /home/nestor/.docker/
+    owner: nestor
+    group: nestor
+    mode: "0600"
+
+- name: Create docker config directory for root
+  become: yes
+  file:
+    path: /root/.docker
+    owner: root
+    group: root
+    state: directory
+
+- name: Copy docker config for root
+  copy:
+    src: config.json
+    dest: /root/.docker/
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Enable and start docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes

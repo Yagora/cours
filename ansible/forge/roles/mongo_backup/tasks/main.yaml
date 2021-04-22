@@ -1,0 +1,21 @@
+- name: DB backup
+  shell: "mongodump --archive={{ mongo_backup_archive_folder }}/{{ mongo_backup_archive_name }} --db {{ component }} {{ mongo_backup_collection_excluded }} --gzip"
+  register: backup_command
+
+- name: Send backup to the S3 Bucket
+  aws_s3:
+    mode: put
+    bucket: "{{ mongo_backup_s3_bucket }}"
+    src: "{{ mongo_backup_archive_folder }}/{{ mongo_backup_archive_name }}"
+    object: "{{ mongo_backup_s3_destination }}/{{ mongo_backup_archive_name }}"
+  when: "backup_command.failed == false"
+
+- name: Delete the archive
+  file:
+    path: "{{ mongo_backup_archive_folder }}/{{ mongo_backup_archive_name }}"
+    state: absent
+
+- name: Exit in error if failed
+  fail:
+    msg: "The backup of {{ ansible_hostname }} failed"
+  when: "backup_command.failed == true"

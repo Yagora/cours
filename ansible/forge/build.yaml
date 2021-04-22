@@ -1,0 +1,106 @@
+- name: Create local build host (for namespacing purpose)
+  hosts: ansible
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  tasks:
+  - name: Fail if component is not defined
+    fail:
+      msg: 'you need to give the component'
+    when: component is not defined
+  - name: create ansible host
+    add_host:
+      hostname: "{{ component }}"
+      ansible_connection: local
+
+- name: Creating
+  hosts: "{{ component }}"
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
+  vars:
+    component_version: "{{ component }}"
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  - name: end play if deploy only component
+    meta: end_play
+    when: component in bd_provisionable_components
+  tasks:
+  - name: Check if buildable as AMI
+    include_role:
+      name: bd
+      tasks_from: check
+  - name: Launch to EC2
+    include_role:
+      name: bd
+      tasks_from: launch
+
+- name: Provisioning
+  hosts: "{{ hostvars[component]['bd_machine_ip'] | default('ansible') }}"
+  remote_user: "{{ hostvars[component][component + '_ssh_user'] | default('nestor') }}"
+  become: yes
+  become_user: "{{ hostvars[component][component + '_become_user'] | default('root') }}"
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
+  vars:
+    component_version: "{{ component }}"
+  gather_facts: "{{ hostvars[component]['bd_machine_ip'] | default(false) }}"
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  - meta: end_play
+    when: >-
+      (component in bd_provisionable_components)
+      or
+      (hostvars[component]['bd_machine_ip']  is not defined)
+  tasks:
+  - block:
+    - name: Provision machine
+      include_role:
+        name: "{{ component }}"
+        tasks_from: provisionning
+        apply:
+          remote_user: "{{ hostvars[inventory_hostname][component + '_ssh_user'] | default('nestor') }}"
+          become: yes
+          become_user: root
+    - name: Copy ssh keys
+      include_role:
+        name: ssh_keys
+    - name: provisioning succeeded, ok to create image
+      set_fact:
+        bd_ok_to_save: true
+        bd_provisioning_failed: false
+    rescue:
+    # needs this to continue to next play when
+    # there's an error
+    - meta: clear_host_errors
+    # needs to redefine facts after clear_host_errors
+    - set_fact:
+        bd_machine_ip: "{{ component }}"
+        bd_ok_to_save: false
+        bd_provisioning_failed: true
+
+- name: Saving
+  hosts: "{{ component }}"
+  vars:
+    component_version: "{{ component }}"
+  pre_tasks:
+  - name: Stop if component version is set to 0
+    meta: end_play
+    when: component_version | string == '0'
+  tasks:
+  - block:
+    - meta: end_play
+      when: hostvars[component]['bd_machine_ip']  is not defined
+    - name: Save machine as AMI
+      include_role:
+        name: bd
+        tasks_from: save
+      when: hostvars[hostvars[component]['bd_machine_ip']]['bd_ok_to_save'] | bool
+    always:
+    - name: Stop provisioning machine
+      include_role:
+        name: bd
+        tasks_from: clean
+      when: not (hostvars[hostvars[component]['bd_machine_ip']]['bd_provisioning_failed'] | bool)
+    - name: Provisioning failed ?
+      fail:
+        msg: 'Provisioning step failed'
+      when: hostvars[hostvars[component]['bd_machine_ip']]['bd_provisioning_failed'] | bool

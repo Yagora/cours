@@ -1,0 +1,6 @@
+dependencies:
+  - nestor_user
+  - epel
+  - ssm
+  - python2
+  - timezone

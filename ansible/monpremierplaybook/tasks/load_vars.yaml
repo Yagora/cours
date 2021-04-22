@@ -1,2 +1,7 @@
+# ansible-playbook playbook -e env=prod
+
 - include_vars:
     file: "{{ playbook_dir }}/vars/vars.yaml"
+
+- include_vars:
+    file: "{{ playbook_dir }}/prod/vars.yaml"

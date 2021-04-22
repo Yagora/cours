@@ -1,0 +1,45 @@
+################################################################################
+# defaults
+################################################################################
+ansible_architecture: x86_64
+ansible_distribution: Amazon
+ansible_os_family: Amazon
+component_dash: "{{ component | regex_replace('_', '-') }}"
+application_load_balancer_name: "alb-{{ env }}"
+
+################################################################################
+# bd
+################################################################################
+bd_ip_type: private
+bd_key_name: "{{ aws_key }}"
+
+bd_buildable_components:
+  - user
+  - email
+  - notes
+
+bd_provisionable_components:
+  - mongo
+
+bd_deployable_components: "{{ bd_buildable_components }}"
+
+###################################################################################
+# Mongo
+###############################################################
+mongo_deployment: mongo
+
+
+################################################################################
+# mongo_backup
+################################################################################
+mongo_backup_archive_name_prefix: "{{ env }}_{{ mode }}_"
+mongo_backup_archive_name: "{{ mongo_backup_archive_name_prefix }}{{ time }}.gz"
+mongo_backup_archive_folder: "/tmp"
+mongo_backup_collection_for_partial : "--excludeCollection=COLLECTION --excludeCollection=COLLECTION2 --excludeCollection=COLLECTION3"
+mongo_backup_s3_bucket: "BUCKET"
+mongo_backup_s3_destination: "mongo/{{ env }}"
+
+################################################################################
+# mongo_restore
+################################################################################
+mongo_restore_archive_folder: "/tmp"

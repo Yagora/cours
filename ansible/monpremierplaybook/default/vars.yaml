@@ -1,0 +1,11 @@
+vpc_id: vpc-erdf34de
+user: nestor
+
+############################
+# Mongo
+############################
+mongo:
+  user: mongonestor
+  port: 8080
+
+mongo_ssh_key: forge

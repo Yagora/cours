@@ -1,0 +1,20 @@
+---
+- name: Ensure /tmp/ssm
+  file:
+    path: /tmp/ssm
+    state: directory
+
+- name: Install SSM Agent
+  yum:
+    state: latest
+    name: https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+
+- name: Ensure /tmp/ssm is removed
+  file:
+    path: /tmp/ssm
+    state: absent
+
+- name: Enable service SSM, and not touch the state
+  service:
+    name: amazon-ssm-agent
+    enabled: yes

@@ -1,0 +1,27 @@
+- name: Ensure group 'nestor' exists
+  group:
+    name: nestor
+    gid: 1001
+    state: present
+
+- name: Ensure user 'nestor' exists
+  user:
+    name: nestor
+    uid: "1001"
+    group: "1001"
+    create_home: true
+    state: present
+
+- name: Ensure 'nestor' group has passwordless sudo
+  lineinfile:
+    path: /etc/sudoers.d/00-nestor
+    state: present
+    create: true
+    line: '%nestor ALL=(ALL) NOPASSWD: ALL'
+
+- name: Set authorized_keys for user 'nestor'
+  authorized_key:
+    user: nestor
+    key: "{{ item }}"
+  with_items:
+    - "{{ lookup('file', 'ssh_key.pub') }}"

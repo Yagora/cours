@@ -1,0 +1,25 @@
+- name: Merge additional_tags to bd_tags if additional_tags
+  set_fact:
+    bd_tags: >-
+      {{
+        bd_tags
+        | default({})
+        | combine({ item | regex_replace('_', '-') : "v" + hostvars[inventory_hostname][item] | string })
+      }}
+  with_items: "{{ hostvars[inventory_hostname][component + '_subcomponents'] }}"
+  when: >-
+    (hostvars[inventory_hostname][component + '_subcomponents'] is defined)
+    and
+    (hostvars[inventory_hostname][component + '_subcomponents'] | length > 0)
+
+# filter tags are tags in the form "tag:<tag_name>" for use in
+# ec2-exists and ami-exists.
+- name: Create bd_filter_tags from bd_tags
+  set_fact:
+    bd_filter_tags: >-
+      {{
+        bd_filter_tags
+        | default({})
+        | combine({ 'tag:' + item.key : item.value })
+      }}
+  with_items: "{{ bd_tags | dict2items }}"

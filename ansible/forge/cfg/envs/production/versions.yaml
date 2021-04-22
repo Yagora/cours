@@ -1,0 +1,19 @@
+################################################################################
+# versions
+################################################################################
+base: 1.0.0
+api_gateway: 1.0.0
+authorization_server: 1.0.0
+catalogue: 1.0.0
+configuration: 1.0.0
+direct_payment: 1.0.0
+historization: 1.0.0
+mail: 1.0.0
+media: 1.0.0
+notes: 1.0.0
+real_estate: 1.1.1
+renting: 1.0.0
+technical_issues: 2.0.0
+transactions: 1.0.1
+translation: 1.0.0
+user: 1.0.0

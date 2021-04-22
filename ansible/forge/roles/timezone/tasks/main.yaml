@@ -1,0 +1,30 @@
+---
+- name: Install Chrony
+  yum:
+    name:
+      - chrony
+    state: latest
+
+- name: Copy chrony conf
+  copy:
+    src: chrony.conf
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Rename old locale
+  shell: mv /etc/localtime /root/localtime.old
+
+- name: Link to french localtime
+  file:
+    src: /usr/share/zoneinfo/Europe/Paris
+    dest: /etc/localtime
+    owner: root
+    group: root
+    state: link
+
+- name: Activate chronyd at startup
+  service:
+    name: chronyd
+    enabled: yes

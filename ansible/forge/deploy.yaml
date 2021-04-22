@@ -1,0 +1,27 @@
+- name: Create local build host (for namespacing purpose)
+  hosts: ansible
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  tasks:
+  - name: Add needed hosts
+    include_role:
+      name: bd
+      tasks_from: add-hosts
+
+- name: Deploy
+  hosts: "{{ component }}"
+  become: yes
+  gather_facts: yes
+  vars:
+    component_version: "{{ component }}"
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  - name: Stop if component version is set to 0
+    meta: end_play
+    when: component_version | string == '0'
+  tasks:
+  - name: Launch deploy task
+    include_role:
+      name: bd
+      tasks_from: deploy
+  serial: 1

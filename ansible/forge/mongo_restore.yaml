@@ -1,0 +1,54 @@
+#  ansible-playbook mongo_restore.yaml -e env_source=prod -e env_target=staging -e mode=(full || partial)
+#
+- name: Preload inventory!
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - meta: end_play
+      when: env_target == "production"
+    - name: Check if it is a correct mode
+      meta: end_play
+      when: (mode != "full") and (mode != "partial")
+
+    - name: Add hosts to inventory
+      add_host:
+        name: "{{ item }}"
+        ansible_host: "{{ item }}"
+        groups: "ec2_instances"
+      with_items:
+        - "{{ env_target }}.mongo-cluster1.nestor.com"
+        - "{{ env_target }}.mongo-cluster2.nestor.com"
+
+- name: Restart mongo-cluster2 to ensure mongo-cluster1 is primary
+  hosts: "{{ env_target }}.mongo-cluster2.nestor.com"
+  remote_user: "nestor"
+  gather_facts: False
+  become: true
+  tasks:
+    - name: Stop mongo-cluster2
+      service:
+        state: stopped
+        name: mongod
+
+    - name: Start mongo-cluster2
+      service:
+        state: restarted
+        name: mongod
+
+- name: Restore mongo
+  hosts: "{{ env_target }}.mongo-cluster1.nestor.com"
+  remote_user: "nestor"
+  become: true
+  vars:
+    env: "{{ env_source }}"
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  tasks:
+  - name: Handle error restore
+    block:
+    - name: Start restore tasks
+      include_role:
+        name: mongo_restore
+    rescue:
+    - name: send to slack

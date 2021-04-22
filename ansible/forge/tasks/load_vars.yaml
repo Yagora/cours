@@ -1,0 +1,10 @@
+- include_vars:
+    file: "{{ playbook_dir }}/cfg/aws/defaults.yaml"
+- include_vars:
+    file: "{{ playbook_dir }}/cfg/aws/{{ env }}.yaml"
+- include_vars:
+    file: "{{ playbook_dir }}/cfg/envs/defaults/vars.yaml"
+- include_vars:
+    file: "{{ playbook_dir }}/cfg/envs/{{ env }}/versions.yaml"
+- include_vars:
+    file: "{{ playbook_dir }}/cfg/envs/{{ env }}/vars.yaml"

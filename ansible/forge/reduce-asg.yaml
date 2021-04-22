@@ -1,0 +1,39 @@
+- name: "Scale ASG to desire size"
+  hosts:  ansible
+  connection: local
+  gather_facts: False
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+
+  tasks:
+
+  - meta: end_play
+    when: env == "prod"
+#
+#   Scale ASG group
+#
+  - name: Get Info of all ASG
+    ec2_asg_info:
+      name: "{{ env }}"
+    register: asgs_info
+
+  - name: Scale ASG to desired size
+    ec2_asg:
+      region: "{{ aws_region }}"
+      name: "{{ item.auto_scaling_group_name}}"
+      health_check_period: 60
+      health_check_type: ELB
+      replace_all_instances: yes
+      wait_timeout: 3000
+      wait_for_instances: no
+      desired_capacity: "{{ nbInstance | int }}"
+      min_size: "{{ nbInstance | int }}"
+      max_size: "{{ ((nbInstance | int) == 0) | ternary(0, (nbInstance | int) + 1) }}"
+    vars:
+      transcoded_suffix: "{{ transco_comp_varname[(item.auto_scaling_group_name | regex_replace(env + '_', ''))] | default('DEFAULT') }}"
+    with_items:
+      - "{{ asgs_info.results }}"
+    register: asg_modif
+    until: asg_modif.failed == false
+    retries: "{{ aws_rest_retry }}"
+    delay: "{{ aws_rest_delay }}"

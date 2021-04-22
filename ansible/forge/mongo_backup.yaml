@@ -1,0 +1,37 @@
+#  ansible-playbook mongo_backup.yml -e env=uat -e mode=(full || partial)
+#
+
+- name: Preload inventory!
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Check if it is a correct mode
+      meta: end_play
+      when: (mode != "full") and (mode != "partial")
+
+    - name: Add hosts to inventory
+      add_host:
+        name: "{{ env }}.mongo-cluster2.nestor.com"
+        ansible_host: "{{ env }}.mongo-cluster2.nestor.com"
+        groups: "ec2_instances"
+
+- name: Backup mongo
+  hosts: "{{ env }}.mongo-cluster2.nestor.com"
+  remote_user: "nestor"
+  pre_tasks:
+  - include_tasks: tasks/load_vars.yaml
+  tasks:
+  - name: Handle error backup
+    block:
+    - name: set var time
+      set_fact:
+        time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+    - name: set backup mode
+      set_fact:
+        mongo_backup_collection_excluded: "{{ mongo_backup_collection_for_partial if mode == 'partial' else '' }}"
+    - name: Start backup tasks
+      include_role:
+        name: mongo_backup
+    rescue:
+    - name: send to slack

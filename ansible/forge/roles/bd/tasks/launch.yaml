@@ -1,0 +1,97 @@
+- include_tasks:
+    file: tags.yaml
+
+- name: Ec2 exists ?
+  ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters: >-
+      {{
+        bd_filter_tags
+        | combine({
+            'instance-state-name': ['pending', 'running', 'stopping', 'shutting-down'],
+            'tag:Name': env_component_name + '-build'
+          })
+        | to_json
+      }}
+  register: precheck_ec2
+
+- debug:
+    msg: "running instance {{ precheck_ec2.instances.0.instance_id }} exists"
+  when: precheck_ec2.instances | length > 0
+
+- include_tasks:
+    file: ami-exists.yaml
+
+- debug: var=precheck_ec2
+
+- name: End all if ec2 or ami exists
+  meta: end_play
+  when: >-
+      ( precheck_ec2.instances | length > 0 )
+      or
+      ( precheck_ami.images | length > 0 )
+
+- name: Set if building is ok to proceed
+  set_fact:
+    bd_ok_to_proceed: >-
+      {{
+        ( precheck_ec2.instances | length == 0 )
+        and
+        ( precheck_ami.images | length == 0 )
+      }}
+
+- debug: var=bd_ok_to_proceed
+
+- name: Launch instance
+  ec2_instance:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    name: "{{ env_component_name }}-build"
+    state: present
+    key_name: "{{ bd_key_name }}"
+    vpc_subnet_id: "{{ hostvars[inventory_hostname][component + '_subnet_ids'] | random }}"
+    security_groups: "{{ hostvars[inventory_hostname][component + '_security_group_ids'] }}"
+    instance_type: "{{ hostvars[inventory_hostname][component + '_instance_type'] | default(aws_instance_type) }}"
+    instance_role: "{{ hostvars[inventory_hostname][component + '_iam_profile'] | default(aws_iam_profile) }}"
+    image_id: "{{ hostvars[inventory_hostname][component + '_image_id'] | default(bd_image_id) }}"
+    network:
+      assign_public_ip: "{{ hostvars[inventory_hostname][component + '_lc_assign_public_ip'] | default(aws_lc_assign_public_ip) }}"
+    volumes:
+    - device_name: /dev/xvda
+      ebs:
+        volume_size: "{{ hostvars[inventory_hostname][component + '_volume_size'] | default(aws_volume_size) }}"
+        volume_type: "{{ hostvars[inventory_hostname][component + '_volume_type'] | default(aws_volume_type) }}"
+        delete_on_termination: true
+    tags: "{{ bd_tags | to_json }}"
+  register: bd_machine
+  when: bd_ok_to_proceed | bool
+
+- name: wait for ssh
+  wait_for:
+    port: 22
+    host: "{{ bd_machine['instances'][0][bd_ip_type + '_ip_address'] }}"
+    search_regex: OpenSSH
+    timeout: 420
+  when: bd_ok_to_proceed | bool
+
+- add_host:
+    hostname: "{{ bd_machine['instances'][0][bd_ip_type + '_ip_address'] }}"
+    inventory_dir: "{{ inventory_dir }}"
+    groups:
+      - "{{ component }}"
+    ansible_user: "{{ hostvars[inventory_hostname][component + '_ssh_user'] | default('nestor') }}"
+  when: bd_ok_to_proceed | bool
+
+- name: Set the provisioning machine ip
+  set_fact:
+    bd_machine_ip: "{{ bd_machine['instances'][0][bd_ip_type + '_ip_address'] | default(component) }}"
+
+- debug: var=bd_machine_ip
+
+- name: Set the provisioning machine id
+  set_fact:
+    bd_machine_id: "{{ bd_machine.instances.0.instance_id }}"
+  when: bd_ok_to_proceed | bool

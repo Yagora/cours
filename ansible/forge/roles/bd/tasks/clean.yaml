@@ -1,0 +1,9 @@
+- name: Delete provisioning instance
+  ec2_instance:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    state: absent
+    instance_ids:
+    - "{{ bd_machine_id }}"
+  when: bd_machine_id is defined

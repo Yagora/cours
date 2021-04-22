@@ -1,0 +1,76 @@
+################################################################################
+# all
+################################################################################
+dns_domain: dev.nestor.com
+project: PROJECT
+component_version: "{{ lookup('vars', component ) }}"
+
+################################################################################
+# aws
+################################################################################
+aws_account: ""
+aws_access_key:
+aws_secret_key:
+
+aws_rest_retry: 10
+aws_rest_delay: 5
+
+aws_region: eu-west-3
+aws_zones:
+  - eu-west-3a
+  - eu-west-3b
+  - eu-west-3c
+
+aws_base_ami_id: ami-
+
+aws_key: forge
+
+aws_asg_min_size: 1
+aws_asg_max_size: 1
+aws_asg_desired_capacity: 1
+
+aws_iam_profile:
+
+aws_instance_type: "t3a.small"
+
+aws_volume_size: 50
+aws_volume_type: gp2
+
+aws_ecr_url: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+aws_lc_assign_public_ip: false
+
+################################################################################
+# user
+################################################################################
+user_security_group_ids:
+  - "{{ aws_security_group_ids.private.default }}"
+  - "{{ aws_security_group_ids.private.common_api }}"
+user_subnet_ids:
+  - "{{ aws_subnet_ids.private.a2 }}"
+  - "{{ aws_subnet_ids.private.b2 }}"
+user_elb_security_group_ids:
+  - "{{ aws_security_group_ids.private.default }}"
+  - "{{ aws_security_group_ids.private.common_api }}"
+user_elb_subnet_ids:
+  - "{{ aws_subnet_ids.private.a2 }}"
+  - "{{ aws_subnet_ids.private.b2 }}"
+user_elb_listeners:
+  - protocol: http
+    load_balancer_port: 80
+    instance_port: 80
+    instance_protocol: http
+user_elb_health_check:
+  ping_protocol: http
+  ping_port: 80
+  ping_path: "/status"
+  response_timeout: 5
+  interval: 30
+  unhealthy_threshold: 5
+  healthy_threshold: 2
+
+################################################################################
+# base
+################################################################################
+base_security_group_ids: "{{ [aws_security_group_ids.private.default] }}"
+base_subnet_ids: "{{ [aws_subnet_ids.private.a, aws_subnet_ids.private.b] }}"
